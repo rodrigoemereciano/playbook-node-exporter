@@ -1,0 +1,38 @@
+---
+# tasks para a instalação do node-exporter
+
+- name: Download e descompactando o node-exporter
+  ansible.builtin.unarchive:
+    src: https://github.com/prometheus/node_exporter/releases/download/v1.1.2/node_exporter-1.1.2.linux-amd64.tar.gz
+    dest: /tmp
+    remote_src: yes
+
+- name: Copiando arquivos do node-exporter
+  shell: cp -v node_exporter-1.1.2.linux-amd64/node_exporter /usr/bin
+  args:
+    chdir: /tmp
+
+- name: criar usuário node-exporter
+  ansible.builtin.user:
+    name: node_exporter
+    shell: /sbin/nologin
+    create_home: False
+    append: yes
+
+- name: copiando node_exporter.service
+  ansible.builtin.copy:
+    src: arquivos/node_exporter.service 
+    dest: /etc/systemd/system/node_exporter.service
+    owner: root
+    group: root 
+    mode: "755"
+
+- name: Reload do systemd 
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Garantir que o node_exporter está habilitado e executando
+  ansible.builtin.systemd:
+    state: started
+    daemon_reload: yes
+    name: node_exporter
