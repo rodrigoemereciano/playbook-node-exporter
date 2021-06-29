@@ -32,6 +32,6 @@
     group: root 
     mode: "755"
     notify:
-      - Reload do systemd 
-      - Start node_exporter
+      - reload systemd 
+      - start node_exporter
 
