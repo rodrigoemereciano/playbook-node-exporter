@@ -3,36 +3,35 @@
 
 - name: Download e descompactando o node-exporter
   ansible.builtin.unarchive:
-    src: https://github.com/prometheus/node_exporter/releases/download/v1.1.2/node_exporter-1.1.2.linux-amd64.tar.gz
+    src: "{{ url_node_exporter}}"
     dest: /tmp
     remote_src: yes
 
-- name: Copiando arquivos do node-exporter
-  shell: cp -v node_exporter-1.1.2.linux-amd64/node_exporter /usr/bin
-  args:
-    chdir: /tmp
+- name: Verificar se folder node_exporter existe
+  stat:
+    path: /usr/bin/node_exporter
+  register: register_name
 
+- name: Copiando arquivos do node-exporter se nao existir o diretorio
+  ansible.builtin.shell:
+    cmd: cp -v "{{ node_exporter_version }}"/node_exporter /usr/bin
+    chdir: /tmp
+  when: not register_name.stat.exists
+  
 - name: criar usuário node-exporter
   ansible.builtin.user:
     name: node_exporter
     shell: /sbin/nologin
     create_home: False
-    append: yes
 
-- name: copiando node_exporter.service
+- name: copiando node_exporter.service e executando servico
   ansible.builtin.copy:
-    src: arquivos/node_exporter.service 
+    src: node_exporter.service 
     dest: /etc/systemd/system/node_exporter.service
     owner: root
     group: root 
     mode: "755"
+    notify:
+      - Reload do systemd 
+      - Start node_exporter
 
-- name: Reload do systemd 
-  ansible.builtin.systemd:
-    daemon_reload: yes
-
-- name: Garantir que o node_exporter está habilitado e executando
-  ansible.builtin.systemd:
-    state: started
-    daemon_reload: yes
-    name: node_exporter

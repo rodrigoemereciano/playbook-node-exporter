@@ -1,6 +1,6 @@
 ---
 - name: Instalação do node-exporter
-  hosts: maquineta
+  hosts: maquinetas
   remote_user: ansible
   become: yes
 
